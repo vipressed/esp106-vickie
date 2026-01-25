@@ -9,22 +9,41 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+## This is the lab for week 2 
+## Add working R code in between the questions
+## The functions refer to the sections in https://rspatial.org/intr/
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+## Functions
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+## 1) Write a function 'f' that behaves like this:
+## > f('Jim')
+## [1] "hello Jim, how are you?"
+##HINT: you will need to use the paste() function within your new function
+f <- function(Jim) {return('"hello Jim, how are you?"')}
 
-```{r cars}
-summary(cars)
-```
+## 2) Write a function 'sumOfSquares' that behaves like this:
 
-## Including Plots
 
-You can also embed plots, for example:
+## > d <- c(1,5,2,4,6,2,4,5)
+## > sumOfSquares(d)
+## [1] 21.875
 
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
+# To compute the "sum of squares", subtract the mean value of all numbers from each number. 
+# Square these numbers and sum them
+# (bonus: make a variant that can handle NAs)
+sumOfSquares <- function(x) {sum((x-mean(x))^2)}
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+## Flow Control
+
+## 4) Write a for loop that adds the numbers 1 to 10
+##HINT: you will need one variable that loops through the numbers 1 to 10 and one that keeps count through each loop
+total <- 0
+for (i in seq(1:10)){total <- total +i}
+total
+
+
+## 5) Write a for loop that adds the odd numbers between 1 and 10 
+
+total <- 0
+for (i in seq(1,9,2)){total <- total +i}
+total
