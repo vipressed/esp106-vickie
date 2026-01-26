@@ -60,6 +60,18 @@ Use these to make your plot and add the lines you need
 Hint: you might have to set the y scale manually to make sure your plot is wide enough to show both countries. You can do this using the "ylim" argument in plot
 
 ```{r question2}
+air_us$outdoor_total <- air_us$pm + air_us$ozone
+air_china$outdoor_total <- air_china$pm + air_china$ozone
+
+y_max <- max(air_us$indoor, air_us$outdoor_total, air_china$indoor, airchina$outdoor_total, na.rm = TRUE)
+
+plot(air_us$Year, air_us$indoor, type = "l", col = "blue", lty = 1, ylim = c(0, y_max), xlab = "Year", ylab = "Deaths per 100,000 people", main = "Indoor and Outdoor Air Pollution Death Rates Over Time")
+
+lines(air_us$Year, air_us$outdoor_total, col = "blue", lty = 2)
+lines(air_china$Year, air_china$indoor, col = "red", lty = 1)
+lines(air_china$Year, air_china$outdoor_total, col = "red", lty = 2)
+
+legend("topright", legend = c("United States - Indoor", "United States - OUtdoor", "China - Indoor", "China - Outdoor"), col = c("blue", "blue", "red", "red"), lty = c(1,2,1,2), bty = "n")
 
 ```
 
@@ -72,6 +84,9 @@ In our case, we want to merge both by country (either the "Entity" or "Code" col
 Note that by default, the merge function keeps only the entries that appear in both data frames - that is fine for this lab. If you need for other applications, you can change using the all.x or all.y arguments to the function - check out the documentation at ?merge
 
 ```{r question3}
+air_subset <- air[,c("Entity", "Year", "indoor", "pm", "ozone", "total_air")]
+gdp_subset <- gdppercapiandgini[,c("Entity","Year","gini","GDP")]
+air_gdp <- merge(air_subset, gdp_subset, by = c("Entity","Year"))
 
 ```
 
@@ -85,7 +100,19 @@ STRECTH GOAL CHALLENGE - color the points based on continent. NOT REQUIRED FOR F
 If you are trying this and getting stuck ASK FOR HELP - there are some tips and tricks for making it easier   
 
 ```{r question4}
+air_gdp$log_GDP <- log(air_gdp$GDP)
 
+y_range_indoor <- range(air_gdp$indoor, na.rm = TRUE)
+y_range_outdoor <- range(air_gdp$pm + air_gdp$ozone, na.rm = TRUE)
+y_limits <- range(y_range_indoor, y_range_outdoor)
+
+par(mfrow = c(1, 2))
+
+plot(air_gdp$log_GDP, air_gdp$indoor, ylim = y_limits, xlab = "Log per-capita GDP", ylab = "Indoor air pollution deaths", main = "Indoor deaths vs GDP", pch = 19, col = "blue")
+
+plot(air_gdp$log_GDP, air_gdp$pm + air_gdp$ozone, ylim = y_limits, xlab = "Log per-capita GDP", ylab = "Outdoor air pollution deaths", main = "Outdoor deaths vs GDP", pch = 19, col = "red")
+
+par(mfrow = c(1, 1))
 ```
 
 5. Submission: Upload your Rmarkdown document and knitted PDF document to Canvas. Add your Rmarkdown file to your Github repository, commit your changes and push to your online repository (as we did Wednesday or last week)
