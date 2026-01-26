@@ -1,7 +1,7 @@
 ---
 title: "ESP 106Lab 3"
-author: "Fran Moore"
-date: "2025-01-21"
+author: "Vickie Bach"
+date: "2026-01-25"
 output: pdf_document
 ---
 
@@ -23,8 +23,29 @@ Hint: Make sure to save all material for the lab into one sensible directory, pr
 
 Hint: The column names are long and cumbersome (because they contain information about units et) - you might want to rename some of the columns to make them easier to work with
 
-```{r question1}
+```{r}
+setwd("~/R/Lab 3/data")
+getwd()
 
+
+
+airpollution <- read.csv("airpollution.csv")
+gdppercapiandgini <- read.csv("gdppercapiandgini.csv")
+
+air <-airpollution
+country1 <- "United States"
+country2 <- "China" 
+air_us <- air[air$Entity == country1, ]
+air_china <- air[air$Entity == country2, ]
+names(air)
+
+colnames(airpolution) = c("Entity","Code", "Year", "pm", "indoor", "ozone", "total_air")
+colnames(gdppercapiandgini) = c("Entity", "Code", "Year", "total_population", "Continent", "gini", "GDP")
+```
+
+
+```{r question1}
+## [1] "\Users\74112\Documents\R\Lab 3"
 ```
 
 2. Chose two countries that you are interested in and make a plot showing the death rates from indoor air pollution and outdoor air pollution (sum of particulate matter and ozone) over time  
