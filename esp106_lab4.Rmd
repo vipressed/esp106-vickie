@@ -3,8 +3,14 @@ title: "ESP106-Lab4"
 author: "Vickie Bach"
 date: "January 30, 2026"
 output: pdf_document
----
 
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+  tidy = TRUE,
+  tidy.opts = list(width.cutoff = 60)
+)
+```
 ## Lab 4
 
 In this lab we will look at daily tide data downloaded from NOAA's Tides and Currents API (Application Programming Interface) for six cities around the US. I used the API to obtain six csv files containing data for tide gauges in each city. These are in the "Data" folder. The tide gauges have numerical codes that correspond to the city as follows:
@@ -21,7 +27,7 @@ In this lab we will look at daily tide data downloaded from NOAA's Tides and Cur
 1. Create a data frame containing data on the city name and tide gauge ID given above. Your data frame should have 2 columns, one for the city name and one for the gauge ID. It will have 6 rows, one for each city.
 
 ```{r question 1}
-
+tide_gauges <- data.frame(city=c("Boston", "New York", "Baltimore", "Charleston", "Miami", "Corpus Christi"), gauge_id = c(8443970, 8518750, 8574680, 8665530, 8723214, 8775296))
 ```
 
 
@@ -41,16 +47,24 @@ To do this:
 ```{r question2}
 
 #2.1
-
+files <- list.files(path="Data", full.names=TRUE)
 
 #2.2
-
+tidedata <- read.csv(files[1])
 
 #2.3
+tidedata$city <- tide_gauges$city[1]
+tidedata$gauge_id <- tide_gauges$gauge_id[1]
+
 
 
 #2.4
-
+for (i in 2:length(files)) {
+temp <- read.csv(files[i]) 
+temp$city <- tide_gauges$city[i] 
+temp$gauge_id <- tide_gauges$gauge_id[i] 
+tidedata <- rbind(tidedata, temp)
+}
 
 ```
 
@@ -68,10 +82,10 @@ We are going to examine the question of whether these gauges show evidence of ri
 library(lubridate)
 
 #3.1
-
+tidedata$Date <- paste0(tidedata$Year, "-", sprintf("%02d",tidedata$Month),"-01")
 
 #3.2
-
+tidedata$Date <- ymd(tidedata$Date)
 
 ```
 
@@ -88,12 +102,16 @@ Make sure to add proper axis labels and units (using +labs(x="",y=""))
 ```{r question4}
 library(ggplot2) #if you don't already have ggplot2 then install it using install.packages("ggplot2")
 
+ggplot(tidedata, aes(x = Date, y = MHHW, color = city)) + geom_line() + geom_smooth(aes(x = Date, y = MHHW), method = "lm", inherit.aes = FALSE, color = "black") + labs(x = "Date", y = "Mean Higher High Water (m)", color = "City") + theme_minimal()
+
 ```
 
 5. Now make a slightly different plot with the same x and y variables, but use facet_wrap() to make a subplot separately for each city. Add a best-fit line for each subplot. See the example plot uploaded to Canvas (Plot 2)
 
 ```{r question5}
 #Hint: you should only need minor modification of the code from question 4 to make this plot
+
+ggplot(tidedata, aes(x = Date, y = MHHW)) + geom_line(color = "steelblue") + geom_smooth(method = "lm", color = "black") + facet_wrap(~ city, scales = "free_y") + labs(x = "Date", y = "Mean Higher High Water (m)") + theme_minimal()
 
 ```
 
@@ -104,7 +122,7 @@ In this part of the lab we will identify some outliers, and practice running reg
 6. Make a box plot showing the distribution of the highest tides each month ("Highest" column in the NOAA data) . (Ideally practice using ggplot by using geom_boxplot() - put the city on the x axis and Highest on the y. But this can also be done in base R). See the example plot on Canvas (Plot 3)
 
 ```{r question6}
-
+ggplot(tidedata, aes(x = city, y = Highest)) + geom_boxplot() + labs(x = "City",y = "Highest Monthly Tide (m)") + theme_minimal()
 ```
 
 Notice the very extreme value in New York City - a major outlier both within New York and compared to all the other cities
@@ -114,9 +132,15 @@ Notice the very extreme value in New York City - a major outlier both within New
 ```{r question7}
 #Hint: The which.max() function might be useful here
 
+outlier_row <- tidedata[which.max(tidedata$Highest), ] 
+outlier_row
 ```
 
 7b. What month and year did this outlier event occur in? What meteorological event happened in New York in that month that probably caused this outlier event? (Feel free to use Google - I don't expect you to know this off hand)
+
+``` {r question7b}
+# October 2012 (because of Hurricane Sandy).
+```
 
 Finally, we will fit a linear model to estimate the rate of sea-level rise across these 6 cities.
 
@@ -124,6 +148,13 @@ Finally, we will fit a linear model to estimate the rate of sea-level rise acros
 
 ```{r question8}
 #Hint: the forumla in your lm() function is of the form y~x where y here is MHHW and x is your date column
+
+slr_model <- lm(MHHW ~ Date, data = tidedata)
+summary(slr_model)
+
+# The estimated coefficient of the date column is 2.732e^-5 m/day and it is statistically significant.
+
+# The mean increase in sea-level over the next 10 years (2011-2020) is approximately 0.0997 meters across the six cities.
 
 ```
 
