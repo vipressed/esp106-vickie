@@ -37,7 +37,11 @@ This is a set of point location for GPS tagged blue whales the eastern north Pac
 2) How many observations are there in this dataset? And how many individual whales are tracked? 
 
 ```{r nobs}
+nrow(bluew)
+## 15545 observations
 
+length(unique(bluew$ind_indent))
+## 141 whales
 
 ```
 
@@ -64,18 +68,24 @@ plot(wrld, ext=aoi)
 
 #Step 2: plot the whale points. You can use either the "points" method or "plot( , add=TRUE)". The latter is easier for coloring, but you need to tell it not to add a legend.
 
-plot(bluew, add=TRUE)
+ids <- as.factor(bluew$ind_ident)
+cols <- rainbow(length(levels(ids)))[ids]
+
+plot(bluew, col=cols, pch=16, cex=0.4, add=TRUE, legend=FALSE)
 ```
 
 5) make new SpatVectors for each of the following two individuals: "2008CA-Bmu-00825" and "2005CA-Bmu-10821"
 
 ```{r spatv}
+w1 <- bluew[bluew$ind_ident == "2008CA-Bmu-00825", ]
+w2 <- bluew[bluew$ind_ident == "2005CA-Bmu-10821", ]
 
 ```
 
 6) Combine these two into one new SpatVector 
 
 ```{r comb}
+w_comb <- rbind(w1, w2)
 
 ```
 
@@ -83,6 +93,17 @@ plot(bluew, add=TRUE)
 7) Make a map showing the tracks of these two using different colors. See plot2 on Canvas for an example.
 
 ```{r tracks}
+plot(wrld, ext=ext(w_comb)+2)
+
+points(w1, col="blue", pch=16, cex=0.6)
+points(w2, col="red", pch=16, cex=0.6)
+
+legend("bottomleft",
+        legend=c("2008CA-Bmu-00825", "2005CA-Bmu-10821"),
+       col=c("blue", "red"),
+       pch=16,
+       bty="n")
+
 ```
 
 ## Protected areas
@@ -90,38 +111,69 @@ plot(bluew, add=TRUE)
 8) The folder MPAs has a shapefile with polygons for Marine Protected Areas within the United States. This file was extracted from a file with all protected areas in the US [source](https://www.protectedplanet.net). Read the MPA shapefile. 
 
 ```{r PAs}
-mpa <- ___________
+mpa <- vect("mpas.shp")
 ```
 
 9) Now we will focus on just the US west coast. You can use the following longitude and latitude extent: xmin=-128, xmax=-115, ymin=32, ymax=40. Get just the MPAs on the US west coast by cropping the MPA dataset to this extent.
 
 ```{r ext}
 #Hint: use the crop() function
-mpa <- _______________
+west_ext <- ext(-128,-115,32,40)
+mpa <- crop(mpa, west_ext)
 ```
 
 10) Find the fraction of the blue whale observations that are in one of the west coast MPAs. You can use `is.related`
 
 ```{r frac}
+inside <- is.related(bluew, mpa, "intersects")
+
+frac_obs <- sum(inside) /nrow(bluew)
+frac_obs 
+## 0.1605661
 ```
 
 11) Find what fraction of blue whales in the dataset spend at least some time in one of these west coast MPAs. 
 
 ```{r fracMPA}
+bluew$inside_mpa <- inside
+whale_use <- tapply(bluew$inside_mpa, bluew$ind_ident, any)
+
+frac_whales <- sum(whale_use) / length(whale_use)
+frac_whales
+## 0.8439716
 ```
 
 
 12. Create a raster with counts of blue whale observations along the California coast. Use the spatial extent we used for the mpa data (question 8) and use a spatial resolution of 1/6th of a degree. First create an empty SpatRaster. Then use `rasterize`
 
 ```{r rcount}
-r <- rast(  , res=1/6)
-r <- rasterize(   , fun="count")
+r <- rast(west_ext, res=1/6)
+r <- rasterize(bluew, r, fun="count")
 r
 ```
 
 13. Make a map to show the counts and the MPAs and land areas. Plot 3 on Canvas shows you the plot you are aiming for. 
 
 ```{r countmap}
+plot(r,
+     main="Blue whale observations in MPAs",
+     col=hcl.colors(20, "YlGnBu", rev=TRUE),
+     axes=TRUE,
+     plg=list(title="Blue Whale Counts"))
+
+coast <- crop(wrld, ext(r)+1)
+plot(coast, col="gray85", border="gray60", add=TRUE)
+
+plot(mpa, col=NA, border="red", lwd=1.2, add=TRUE)
+
+legend("left",
+       inset=c(0,-0.08),
+       legend= "MPAs",
+       col="red",
+       lwd=2, 
+       bty="n",
+       xpd=TRUE)
+
 
 ```
 
@@ -129,12 +181,20 @@ r
 
 ```{r distcoast}
 coast <- crop(wrld, ext(r)+1)
-dist_coast <- ________
+land_rast <- rasterize(coast, r)
+
+dist_coast <- distance(land_rast)
+dist_coast
+
 ```
 
 15) For each blue whale observation, find the distance to the coast based on this raster (you can use `terra::extract`). Make a histogram of the distribution. 
 
 ```{r extract}
+dist_vals <- extract(dist_coast, bluew)
+hist(dist_vals[,2],
+     main="Distance of Blue Whale Observations to Coast",
+     xlab="Distance (meters)")
 
 ```
 
